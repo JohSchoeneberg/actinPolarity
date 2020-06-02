@@ -19,11 +19,12 @@ import sys
 import argparse
 
 default_i = "./data/PositiveControl/FilamentProjections/TomoJune_Fil06_Projection_crop.tif"
-default_refPlus = "./data/ReferenceImageStacks/MinusUp.tif"
-default_refMinus = "./data/ReferenceImageStacks/PlusUp.tif"
+default_refPlus = "./data/ReferenceImageStacks/PlusUp.tif"
+default_refMinus = "./data/ReferenceImageStacks/MinusUp.tif"
 default_o = "./output/"
 
-sys.argv = ['actinPolarity.py','-i',default_i,'-refPlus',default_refPlus,'-refMinus',default_refMinus,'-o',default_o]
+# this is the default system argument value array. Uncomment to run independent of command line
+#sys.argv = ['actinPolarity.py','-i',default_i,'-refPlus',default_refPlus,'-refMinus',default_refMinus,'-o',default_o]
 
 
 parser = argparse.ArgumentParser(description='ActinPolarity by Joh Schoeneberg 2020')
@@ -44,7 +45,7 @@ args = vars(parser.parse_args())
 
 
 #args = vars(parser.parse_args())
-print(args)
+#print(args)
 
 
 
@@ -53,7 +54,7 @@ print(args)
 
 
 
-#zoom call timestamp 19:00 
+#zoom call timestamp 19:00
 width = 23;
 height = 69;
 every = 5;
@@ -61,15 +62,19 @@ every = 5;
 #import mask
 input_image_path = os.path.abspath(os.path.join(args['input']))
 
-MinusUp_image_path = os.path.abspath(os.path.join(args['referencePlusUp']))
-PlusUp_image_path = os.path.abspath(os.path.join(args['referenceMinusUp']))
+
+PlusUp_image_path = os.path.abspath(os.path.join(args['referencePlusUp']))
+MinusUp_image_path = os.path.abspath(os.path.join(args['referenceMinusUp']))
 
 output_folder_path = os.path.abspath(os.path.join(args['output']))
+#create folder if it does not exist
+from pathlib import Path
+Path(output_folder_path).mkdir(parents=True, exist_ok=True)
 
 
 image = skimage.external.tifffile.imread(input_image_path)
 globalMin = np.min(image)
-globalMax = np.max(image) 
+globalMax = np.max(image)
 
 minusUpReference = skimage.external.tifffile.imread(MinusUp_image_path)
 #print(image.shape)
@@ -91,7 +96,7 @@ plusUpReference = skimage.external.tifffile.imread(PlusUp_image_path)
 #import time
 #start_time = time.time()
 
-
+print("extracting subimages of shape (w,h) ({},{}) every {} pixel ...".format(width,height,every))
 
 totalHeight = image.shape[0]
 #print(totalHeight);
@@ -100,14 +105,14 @@ subpictures = []
 for i in range(0,nSubpictures):
 #    print(i)
     subpicture = image[i*every:height+i*every,:]
-    
+
     skimage.external.tifffile.imsave(output_folder_path+"/output_"+str(i).zfill(5)+".tiff", subpicture, imagej=True );
-    
+
 #    plt.imshow(subpicture,cmap='gray')
 #    plt.show()
     subpictures.append(subpicture)
-    
-print("found {} subpictures".format(len(subpictures)))    
+
+print("found {} subpictures".format(len(subpictures)))
 #print("--- %s seconds ---" % (time.time() - start_time))
 
 
@@ -158,6 +163,7 @@ def getR(d1, d2):
 #7
 #import time
 #start_time = time.time()
+print("calculating R values...")
 
 rValuesPlusUpReference = []
 rValuesMinusUpReference = []
@@ -212,7 +218,7 @@ if(np.mean(np.array(rValuesPlusUpReference)-np.array(rValuesMinusUpReference))<0
 else:
     plt.title("difference plus-minus >=0 = {}: i.e. Plus End Up".format(avgDifference))
     endUpDecision = "Plus End Up"
-    
+
 plt.savefig(output_folder_path+'/plot_difference.png')
 
 
@@ -225,14 +231,15 @@ plt.savefig(output_folder_path+'/plot_difference.png')
 
 data = np.array([rValuesPlusUpReference, rValuesMinusUpReference])
 #print( data.shape)
-df = pd.DataFrame({'R_plusUpReference': data[0], 
-                   'R_plusUpReference_area': np.sum(np.abs(data[0])), 
-                   'R_minusUpReference': data[1], 
+df = pd.DataFrame({'R_plusUpReference': data[0],
+                   'R_plusUpReference_area': np.sum(np.abs(data[0])),
+                   'R_minusUpReference': data[1],
                    'R_minusUpReference_area': np.sum(np.abs(data[1])),
                    'R_Plus_minus_R-Minus:':avgDifference,
                    'R_Plus_minus_R-Minus:':endUpDecision})
 print(df)
 df.to_csv(output_folder_path+'/output.csv', index = True)
 
-
-
+############################################################
+print("done.")
+print("find the outputs in "+output_folder_path)
