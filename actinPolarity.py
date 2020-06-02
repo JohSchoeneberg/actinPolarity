@@ -92,7 +92,6 @@ plusUpReference = skimage.external.tifffile.imread(PlusUp_image_path)
 #4
 
 
-
 #import time
 #start_time = time.time()
 
@@ -102,8 +101,8 @@ totalHeight = image.shape[0]
 #print(totalHeight);
 nSubpictures = (np.floor(((totalHeight-height)/every))).astype(int)
 subpictures = []
-for i in range(0,nSubpictures):
-#    print(i)
+for i in range(nSubpictures,0,-1):
+    #print(i)
     subpicture = image[i*every:height+i*every,:]
 
     skimage.external.tifffile.imsave(output_folder_path+"/output_"+str(i).zfill(5)+".tiff", subpicture, imagej=True );
@@ -114,6 +113,8 @@ for i in range(0,nSubpictures):
 
 print("found {} subpictures".format(len(subpictures)))
 #print("--- %s seconds ---" % (time.time() - start_time))
+
+
 
 
 
@@ -194,6 +195,7 @@ plt.gca().spines['top'].set_visible(False)
 plt.legend(loc="upper right")
 plt.ylim(-0.2,1)
 plt.savefig(output_folder_path+'/plot.png')
+plt.savefig(output_folder_path+'/plot.svg')
 
 
 
@@ -220,6 +222,7 @@ else:
     endUpDecision = "Plus End Up"
 
 plt.savefig(output_folder_path+'/plot_difference.png')
+plt.savefig(output_folder_path+'/plot_difference.svg')
 
 
 
